@@ -1,0 +1,7 @@
+node_modules/
+.env
+.claude/
+test-server.js
+uploads/
+*.log
+.DS_Store
