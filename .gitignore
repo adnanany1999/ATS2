@@ -5,3 +5,4 @@ test-server.js
 uploads/
 *.log
 .DS_Store
+.vercel
