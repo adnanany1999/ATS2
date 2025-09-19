@@ -54,6 +54,20 @@ router.post('/', async (req, res) => {
   }
 });
 
+router.get('/:id', async (req, res) => {
+  try {
+    const job = await Job.findById(req.params.id).populate('applications');
+
+    if (!job) {
+      return res.status(404).json({ error: 'Job not found' });
+    }
+
+    res.json(job);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 router.put('/:id', async (req, res) => {
   try {
     const job = await Job.findByIdAndUpdate(

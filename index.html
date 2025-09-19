@@ -1,0 +1,1441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple ATS - Applicant Tracking System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+            color: #2c3e50;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .header-nav {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .nav-btn.active {
+            background: white;
+            color: #667eea;
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+        }
+
+        .sidebar {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            height: fit-content;
+        }
+
+        .upload-section {
+            margin-bottom: 2rem;
+        }
+
+        .upload-area {
+            border: 2px dashed #667eea;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            background: #f8f9ff;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-area:hover {
+            border-color: #5a6fd8;
+            background: #f0f2ff;
+        }
+
+        .upload-area.dragover {
+            border-color: #764ba2;
+            background: #f5f0ff;
+        }
+
+        .upload-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #667eea;
+        }
+
+        .filter-section h3 {
+            margin-bottom: 1rem;
+            color: #2c3e50;
+            font-size: 1.1rem;
+        }
+
+        .filter-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #e0e6ed;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .filter-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .status-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .status-badge {
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid #e0e6ed;
+            background: white;
+        }
+
+        .status-badge.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .content-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .content-header {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .content-count {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .card {
+            padding: 1.5rem;
+            border-bottom: 1px solid #f0f2f5;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .card:hover {
+            background: #f8f9ff;
+            border-left: 4px solid #667eea;
+        }
+
+        .card:last-child {
+            border-bottom: none;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.8rem;
+        }
+
+        .card-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 0.3rem;
+        }
+
+        .card-title {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .card-status {
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-new { background: #e3f2fd; color: #1976d2; }
+        .status-reviewed { background: #fff3e0; color: #f57c00; }
+        .status-interview { background: #e8f5e8; color: #388e3c; }
+        .status-rejected { background: #ffebee; color: #d32f2f; }
+        .status-hired { background: #f3e5f5; color: #7b1fa2; }
+        .status-active { background: #e8f5e8; color: #388e3c; }
+        .status-draft { background: #f5f5f5; color: #757575; }
+        .status-closed { background: #ffebee; color: #d32f2f; }
+
+        .card-details {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .card-contact {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .card-skills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+        }
+
+        .skill-tag {
+            background: #e9ecef;
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            color: #495057;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .action-btn {
+            padding: 0.4rem 0.8rem;
+            border: 1px solid #e0e6ed;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s ease;
+        }
+
+        .action-btn:hover {
+            background: #f8f9fa;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .btn-primary:hover {
+            background: #5a6fd8;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #6c757d;
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+        }
+
+        /* Analytics specific styles */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            padding: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .chart-placeholder {
+            background: linear-gradient(45deg, #f8f9ff, #e8f0ff);
+            border: 2px dashed #c5d0ff;
+            border-radius: 8px;
+            padding: 3rem;
+            text-align: center;
+            color: #667eea;
+            margin: 1rem 0;
+        }
+
+        /* Job Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            margin: 2rem auto;
+            padding: 2rem;
+            border-radius: 12px;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6c757d;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        textarea.filter-input {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 1.5rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+            }
+            
+            .card-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+            
+            .card-details {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .analytics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Candidate matching styles */
+        .match-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border: 1px solid #e0e6ed;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            background: white;
+            transition: all 0.2s ease;
+        }
+
+        .match-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+        }
+
+        .match-info {
+            flex: 1;
+        }
+
+        .match-name {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 0.2rem;
+        }
+
+        .match-details {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-bottom: 0.3rem;
+        }
+
+        .match-skills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+        }
+
+        .match-skill-tag {
+            background: #e9ecef;
+            padding: 0.1rem 0.4rem;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            color: #495057;
+        }
+
+        .match-percentage {
+            text-align: center;
+            min-width: 80px;
+        }
+
+        .match-score {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.2rem;
+        }
+
+        .match-label {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
+        .match-high { color: #28a745; }
+        .match-medium { color: #ffc107; }
+        .match-low { color: #dc3545; }
+
+        .match-progress {
+            width: 60px;
+            height: 6px;
+            background: #e9ecef;
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 0.3rem auto;
+        }
+
+        .match-progress-bar {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .match-progress-high { background: #28a745; }
+        .match-progress-medium { background: #ffc107; }
+        .match-progress-low { background: #dc3545; }
+
+        /* Page visibility */
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Simple ATS</h1>
+        <div class="header-nav">
+            <button class="nav-btn active" data-page="candidates">Candidates</button>
+            <button class="nav-btn" data-page="jobs">Jobs</button>
+            <button class="nav-btn" data-page="analytics">Analytics</button>
+        </div>
+    </div>
+
+    <!-- CANDIDATES PAGE -->
+    <div class="page active" id="candidates">
+        <div class="main-container">
+            <div class="sidebar">
+                <div class="upload-section">
+                    <h3>Upload Resume</h3>
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-icon">📄</div>
+                        <p><strong>Drop resume here</strong> or click to browse</p>
+                        <p style="font-size: 0.8rem; color: #6c757d; margin-top: 0.5rem;">Supports PDF, DOC, DOCX</p>
+                    </div>
+                    <input type="file" id="fileInput" accept=".pdf,.doc,.docx" style="display: none;">
+                </div>
+
+                <div class="filter-section">
+                    <h3>Active Job</h3>
+                    <select class="filter-input" id="jobSelect">
+                        <option value="">Select Job Position</option>
+                        <option value="frontend-dev" selected>Frontend Developer</option>
+                        <option value="backend-dev">Backend Developer</option>
+                        <option value="ux-designer">UX Designer</option>
+                        <option value="data-analyst">Data Analyst</option>
+                    </select>
+                    
+                    <h3 style="margin-top: 1.5rem;">Search & Filter</h3>
+                    <input type="text" class="filter-input" placeholder="Search by name, skills, or experience..." id="candidateSearch">
+                    
+                    <div class="status-filters">
+                        <span class="status-badge active" data-status="all">All</span>
+                        <span class="status-badge" data-status="new">New</span>
+                        <span class="status-badge" data-status="reviewed">Reviewed</span>
+                        <span class="status-badge" data-status="interview">Interview</span>
+                        <span class="status-badge" data-status="rejected">Rejected</span>
+                        <span class="status-badge" data-status="hired">Hired</span>
+                    </div>
+
+                    <input type="text" class="filter-input" placeholder="Filter by skills (e.g., JavaScript, Python)" id="skillsFilter">
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="content-header">
+                    <h2>Candidates</h2>
+                    <span class="content-count" id="candidateCount">12 candidates found</span>
+                </div>
+
+                <div id="candidatesList">
+                    <div class="card" data-status="new">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-name">Sarah Johnson</div>
+                                <div class="card-title">Senior Frontend Developer</div>
+                            </div>
+                            <span class="card-status status-new">New</span>
+                        </div>
+                        <div class="card-details">
+                            <span class="card-contact">📧 sarah.johnson@email.com</span>
+                            <span class="card-contact">📞 (555) 123-4567</span>
+                        </div>
+                        <div class="card-skills">
+                            <span class="skill-tag">React</span>
+                            <span class="skill-tag">JavaScript</span>
+                            <span class="skill-tag">TypeScript</span>
+                            <span class="skill-tag">Node.js</span>
+                        </div>
+                        <div class="card-actions">
+                            <button class="action-btn btn-primary">View Profile</button>
+                            <button class="action-btn" onclick="updateCandidateStatus(this, 'reviewed')">Mark as Reviewed</button>
+                            <button class="action-btn" onclick="updateCandidateStatus(this, 'interview')">Schedule Interview</button>
+                        </div>
+                    </div>
+
+                    <div class="card" data-status="reviewed">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-name">Michael Chen</div>
+                                <div class="card-title">Full Stack Developer</div>
+                            </div>
+                            <span class="card-status status-reviewed">Reviewed</span>
+                        </div>
+                        <div class="card-details">
+                            <span class="card-contact">📧 m.chen@email.com</span>
+                            <span class="card-contact">📞 (555) 987-6543</span>
+                        </div>
+                        <div class="card-skills">
+                            <span class="skill-tag">Python</span>
+                            <span class="skill-tag">Django</span>
+                            <span class="skill-tag">PostgreSQL</span>
+                            <span class="skill-tag">AWS</span>
+                        </div>
+                        <div class="card-actions">
+                            <button class="action-btn btn-primary">View Profile</button>
+                            <button class="action-btn" onclick="updateCandidateStatus(this, 'interview')">Schedule Interview</button>
+                            <button class="action-btn" onclick="updateCandidateStatus(this, 'rejected')">Reject</button>
+                        </div>
+                    </div>
+
+                    <div class="card" data-status="interview">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-name">Emily Rodriguez</div>
+                                <div class="card-title">UX/UI Designer</div>
+                            </div>
+                            <span class="card-status status-interview">Interview</span>
+                        </div>
+                        <div class="card-details">
+                            <span class="card-contact">📧 emily.r@email.com</span>
+                            <span class="card-contact">📞 (555) 456-7890</span>
+                        </div>
+                        <div class="card-skills">
+                            <span class="skill-tag">Figma</span>
+                            <span class="skill-tag">Sketch</span>
+                            <span class="skill-tag">Adobe Creative Suite</span>
+                            <span class="skill-tag">Prototyping</span>
+                        </div>
+                        <div class="card-actions">
+                            <button class="action-btn btn-primary">View Profile</button>
+                            <button class="action-btn">Interview Notes</button>
+                            <button class="action-btn" onclick="updateCandidateStatus(this, 'hired')">Move to Hired</button>
+                        </div>
+                    </div>
+
+                    <div class="card" data-status="new">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-name">David Park</div>
+                                <div class="card-title">Data Scientist</div>
+                            </div>
+                            <span class="card-status status-new">New</span>
+                        </div>
+                        <div class="card-details">
+                            <span class="card-contact">📧 david.park@email.com</span>
+                            <span class="card-contact">📞 (555) 321-9876</span>
+                        </div>
+                        <div class="card-skills">
+                            <span class="skill-tag">Python</span>
+                            <span class="skill-tag">Machine Learning</span>
+                            <span class="skill-tag">TensorFlow</span>
+                            <span class="skill-tag">SQL</span>
+                        </div>
+                        <div class="card-actions">
+                            <button class="action-btn btn-primary">View Profile</button>
+                            <button class="action-btn" onclick="updateCandidateStatus(this, 'reviewed')">Mark as Reviewed</button>
+                            <button class="action-btn" onclick="updateCandidateStatus(this, 'interview')">Schedule Interview</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JOBS PAGE -->
+    <div class="page" id="jobs">
+        <div class="main-container">
+            <div class="sidebar">
+                <div class="upload-section">
+                    <h3>Create New Job</h3>
+                    <button class="action-btn btn-primary" style="width: 100%; padding: 0.8rem;" onclick="openJobModal()">+ Add New Position</button>
+                </div>
+
+                <div class="filter-section">
+                    <h3>Job Filters</h3>
+                    <select class="filter-input" id="departmentFilter">
+                        <option>All Departments</option>
+                        <option>Engineering</option>
+                        <option>Design</option>
+                        <option>Marketing</option>
+                        <option>Sales</option>
+                    </select>
+                    
+                    <select class="filter-input" id="jobStatusFilter">
+                        <option>All Status</option>
+                        <option>Active</option>
+                        <option>Draft</option>
+                        <option>Closed</option>
+                    </select>
+
+                    <input type="text" class="filter-input" placeholder="Search job titles..." id="jobSearch">
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="content-header">
+                    <h2>Job Positions</h2>
+                    <span class="content-count" id="jobCount">4 active positions</span>
+                </div>
+
+                <div id="jobsList">
+                    <div class="card" data-status="active" onclick="selectJob('frontend-dev')">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-name">Frontend Developer</div>
+                                <div class="card-title">Engineering • Remote/NYC</div>
+                            </div>
+                            <span class="card-status status-active">Active</span>
+                        </div>
+                        <div class="card-details">
+                            <span class="card-contact">📅 Posted: March 15, 2025</span>
+                            <span class="card-contact">👥 12 applicants</span>
+                        </div>
+                        <div class="card-skills">
+                            <span class="skill-tag">React</span>
+                            <span class="skill-tag">JavaScript</span>
+                            <span class="skill-tag">TypeScript</span>
+                            <span class="skill-tag">3+ years exp</span>
+                        </div>
+                        <div class="card-actions">
+                            <button class="action-btn btn-primary" onclick="event.stopPropagation(); editJob('frontend-dev')">Edit Job</button>
+                            <button class="action-btn" onclick="event.stopPropagation(); viewApplicants('frontend-dev')">View Applicants</button>
+                            <button class="action-btn" onclick="event.stopPropagation(); closeJob('frontend-dev')">Close Position</button>
+                        </div>
+                    </div>
+
+                    <div class="card" data-status="active" onclick="selectJob('backend-dev')">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-name">Backend Developer</div>
+                                <div class="card-title">Engineering • San Francisco</div>
+                            </div>
+                            <span class="card-status status-active">Active</span>
+                        </div>
+                        <div class="card-details">
+                            <span class="card-contact">📅 Posted: March 20, 2025</span>
+                            <span class="card-contact">👥 8 applicants</span>
+                        </div>
+                        <div class="card-skills">
+                            <span class="skill-tag">Python</span>
+                            <span class="skill-tag">Django</span>
+                            <span class="skill-tag">PostgreSQL</span>
+                            <span class="skill-tag">5+ years exp</span>
+                        </div>
+                        <div class="card-actions">
+                            <button class="action-btn btn-primary" onclick="event.stopPropagation(); editJob('backend-dev')">Edit Job</button>
+                            <button class="action-btn" onclick="event.stopPropagation(); viewApplicants('backend-dev')">View Applicants</button>
+                            <button class="action-btn" onclick="event.stopPropagation(); closeJob('backend-dev')">Close Position</button>
+                        </div>
+                    </div>
+
+                    <div class="card" data-status="active" onclick="selectJob('ux-designer')">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-name">UX Designer</div>
+                                <div class="card-title">Design • Remote</div>
+                            </div>
+                            <span class="card-status status-active">Active</span>
+                        </div>
+                        <div class="card-details">
+                            <span class="card-contact">📅 Posted: March 10, 2025</span>
+                            <span class="card-contact">👥 15 applicants</span>
+                        </div>
+                        <div class="card-skills">
+                            <span class="skill-tag">Figma</span>
+                            <span class="skill-tag">User Research</span>
+                            <span class="skill-tag">Prototyping</span>
+                            <span class="skill-tag">4+ years exp</span>
+                        </div>
+                        <div class="card-actions">
+                            <button class="action-btn btn-primary" onclick="event.stopPropagation(); editJob('ux-designer')">Edit Job</button>
+                            <button class="action-btn" onclick="event.stopPropagation(); viewApplicants('ux-designer')">View Applicants</button>
+                            <button class="action-btn" onclick="event.stopPropagation(); closeJob('ux-designer')">Close Position</button>
+                        </div>
+                    </div>
+
+                    <div class="card" data-status="draft" onclick="selectJob('data-analyst')">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-name">Data Analyst</div>
+                                <div class="card-title">Analytics • NYC</div>
+                            </div>
+                            <span class="card-status status-draft">Draft</span>
+                        </div>
+                        <div class="card-details">
+                            <span class="card-contact">📅 Created: March 25, 2025</span>
+                            <span class="card-contact">👥 0 applicants</span>
+                        </div>
+                        <div class="card-skills">
+                            <span class="skill-tag">SQL</span>
+                            <span class="skill-tag">Python</span>
+                            <span class="skill-tag">Tableau</span>
+                            <span class="skill-tag">2+ years exp</span>
+                        </div>
+                        <div class="card-actions">
+                            <button class="action-btn btn-primary" onclick="event.stopPropagation(); editJob('data-analyst')">Edit Job</button>
+                            <button class="action-btn" onclick="event.stopPropagation(); publishJob('data-analyst')">Publish Job</button>
+                            <button class="action-btn" onclick="event.stopPropagation(); deleteJob('data-analyst')">Delete Draft</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ANALYTICS PAGE -->
+    <div class="page" id="analytics">
+        <div class="analytics-grid">
+            <div class="stat-card">
+                <div class="stat-number">47</div>
+                <div class="stat-label">Total Candidates</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">4</div>
+                <div class="stat-label">Active Jobs</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">12</div>
+                <div class="stat-label">Interviews This Week</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">8</div>
+                <div class="stat-label">Hires This Month</div>
+            </div>
+        </div>
+
+        <div class="content-section" style="margin: 0 2rem;">
+            <div class="content-header">
+                <h2>Hiring Pipeline Analytics</h2>
+            </div>
+            
+            <div style="padding: 2rem;">
+                <h3 style="margin-bottom: 1rem;">Candidate Status Distribution</h3>
+                <div class="chart-placeholder">
+                    📊 Interactive Chart: Candidate Pipeline
+                    <div style="margin-top: 1rem; font-size: 0.9rem;">
+                        New: 18 • Reviewed: 12 • Interview: 8 • Hired: 6 • Rejected: 3
+                    </div>
+                </div>
+
+                <h3 style="margin: 2rem 0 1rem 0;">Top Skills in Demand</h3>
+                <div class="analytics-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <div class="stat-card">
+                        <div class="stat-number" style="font-size: 1.8rem;">32</div>
+                        <div class="stat-label">JavaScript</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" style="font-size: 1.8rem;">28</div>
+                        <div class="stat-label">Python</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" style="font-size: 1.8rem;">24</div>
+                        <div class="stat-label">React</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" style="font-size: 1.8rem;">19</div>
+                        <div class="stat-label">SQL</div>
+                    </div>
+                </div>
+
+                <h3 style="margin: 2rem 0 1rem 0;">Hiring Velocity</h3>
+                <div class="chart-placeholder">
+                    📈 Time-to-Hire Trends
+                    <div style="margin-top: 1rem; font-size: 0.9rem;">
+                        Average time to hire: 18 days • Fastest: 8 days • Slowest: 35 days
+                    </div>
+                </div>
+
+                <h3 style="margin: 2rem 0 1rem 0;">Resume-JD Matching Analytics</h3>
+                <div class="content-section" style="margin-bottom: 2rem;">
+                    <div class="content-header">
+                        <h4>Top Candidate Matches by Job</h4>
+                        <select id="jobMatchingSelect" class="filter-input" style="width: auto; margin: 0;">
+                            <option value="">Select Job Position</option>
+                        </select>
+                    </div>
+                    <div id="candidateMatchingResults">
+                        <div class="chart-placeholder">
+                            📊 Select a job position to see candidate matching analysis
+                        </div>
+                    </div>
+                </div>
+
+                <h3 style="margin: 2rem 0 1rem 0;">Department Performance</h3>
+                <div class="analytics-grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                    <div class="stat-card">
+                        <div class="card-name" style="margin-bottom: 1rem;">Engineering</div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span>Open Positions:</span> <strong>3</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span>Applicants:</span> <strong>35</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>Hire Rate:</span> <strong>22%</strong>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="card-name" style="margin-bottom: 1rem;">Design</div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span>Open Positions:</span> <strong>1</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span>Applicants:</span> <strong>15</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>Hire Rate:</span> <strong>27%</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Job Creation/Edit Modal -->
+    <div class="modal" id="jobModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Create New Job Position</h2>
+                <button class="close-btn" onclick="closeJobModal()">×</button>
+            </div>
+            
+            <form id="jobForm">
+                <div class="form-group">
+                    <label class="form-label">Job Title *</label>
+                    <input type="text" id="jobTitle" class="filter-input" placeholder="e.g., Senior Frontend Developer" required>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Department</label>
+                        <select id="jobDepartment" class="filter-input">
+                            <option>Engineering</option>
+                            <option>Design</option>
+                            <option>Marketing</option>
+                            <option>Sales</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Location</label>
+                        <input type="text" id="jobLocation" class="filter-input" placeholder="e.g., Remote, NYC, San Francisco">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Required Skills</label>
+                    <input type="text" id="jobSkills" class="filter-input" placeholder="e.g., React, JavaScript, TypeScript (comma separated)">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Job Description *</label>
+                    <textarea id="jobDescription" class="filter-input" rows="8" placeholder="Enter detailed job description, responsibilities, requirements..." required></textarea>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="action-btn" onclick="closeJobModal()">Cancel</button>
+                    <button type="submit" class="action-btn btn-primary">Save Job</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let currentPage = 'candidates';
+
+        // Navigation functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize navigation
+            const navButtons = document.querySelectorAll('.nav-btn');
+            navButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const targetPage = this.getAttribute('data-page');
+                    showPage(targetPage);
+                });
+            });
+
+            // Initialize file upload
+            initializeFileUpload();
+            
+            // Initialize filters
+            initializeFilters();
+            
+            // Initialize job form
+            initializeJobForm();
+
+            // Initialize analytics
+            initializeAnalytics();
+        });
+
+        function showPage(pageId) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // Show target page
+            document.getElementById(pageId).classList.add('active');
+            
+            // Update navigation
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-page="${pageId}"]`).classList.add('active');
+            
+            currentPage = pageId;
+        }
+
+        // File upload functionality
+        function initializeFileUpload() {
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('fileInput');
+
+            uploadArea.addEventListener('click', () => fileInput.click());
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleFileUpload(files[0]);
+                }
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleFileUpload(e.target.files[0]);
+                }
+            });
+        }
+
+        function handleFileUpload(file) {
+            console.log('Uploading file:', file.name);
+            // Simulate file processing
+            uploadArea.innerHTML = `
+                <div class="upload-icon">✅</div>
+                <p><strong>File uploaded successfully!</strong></p>
+                <p style="font-size: 0.8rem; color: #6c757d; margin-top: 0.5rem;">${file.name}</p>
+            `;
+            
+            // Reset after 3 seconds
+            setTimeout(() => {
+                uploadArea.innerHTML = `
+                    <div class="upload-icon">📄</div>
+                    <p><strong>Drop resume here</strong> or click to browse</p>
+                    <p style="font-size: 0.8rem; color: #6c757d; margin-top: 0.5rem;">Supports PDF, DOC, DOCX</p>
+                `;
+            }, 3000);
+        }
+
+        // Filter functionality
+        function initializeFilters() {
+            // Status filters for candidates
+            const statusBadges = document.querySelectorAll('.status-badge');
+            statusBadges.forEach(badge => {
+                badge.addEventListener('click', function() {
+                    statusBadges.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    filterCandidates();
+                });
+            });
+
+            // Search inputs
+            document.getElementById('candidateSearch').addEventListener('input', filterCandidates);
+            document.getElementById('skillsFilter').addEventListener('input', filterCandidates);
+            document.getElementById('jobSelect').addEventListener('change', filterCandidates);
+
+            // Job filters
+            document.getElementById('departmentFilter')?.addEventListener('change', filterJobs);
+            document.getElementById('jobStatusFilter')?.addEventListener('change', filterJobs);
+            document.getElementById('jobSearch')?.addEventListener('input', filterJobs);
+        }
+
+        function filterCandidates() {
+            const activeStatus = document.querySelector('.status-badge.active').getAttribute('data-status');
+            const searchTerm = document.getElementById('candidateSearch').value.toLowerCase();
+            const skillsFilter = document.getElementById('skillsFilter').value.toLowerCase();
+            
+            const candidates = document.querySelectorAll('#candidatesList .card');
+            let visibleCount = 0;
+            
+            candidates.forEach(candidate => {
+                const status = candidate.getAttribute('data-status');
+                const name = candidate.querySelector('.card-name').textContent.toLowerCase();
+                const title = candidate.querySelector('.card-title').textContent.toLowerCase();
+                const skills = Array.from(candidate.querySelectorAll('.skill-tag')).map(tag => tag.textContent.toLowerCase());
+                
+                const statusMatch = activeStatus === 'all' || status === activeStatus;
+                const searchMatch = searchTerm === '' || name.includes(searchTerm) || title.includes(searchTerm);
+                const skillsMatch = skillsFilter === '' || skills.some(skill => skill.includes(skillsFilter));
+                
+                if (statusMatch && searchMatch && skillsMatch) {
+                    candidate.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    candidate.style.display = 'none';
+                }
+            });
+            
+            document.getElementById('candidateCount').textContent = `${visibleCount} candidates found`;
+        }
+
+        function filterJobs() {
+            const department = document.getElementById('departmentFilter').value;
+            const status = document.getElementById('jobStatusFilter').value;
+            const searchTerm = document.getElementById('jobSearch').value.toLowerCase();
+            
+            const jobs = document.querySelectorAll('#jobsList .card');
+            let visibleCount = 0;
+            
+            jobs.forEach(job => {
+                const jobStatus = job.getAttribute('data-status');
+                const jobTitle = job.querySelector('.card-name').textContent.toLowerCase();
+                const jobDept = job.querySelector('.card-title').textContent.toLowerCase();
+                
+                const statusMatch = status === 'All Status' || jobStatus === status.toLowerCase();
+                const deptMatch = department === 'All Departments' || jobDept.includes(department.toLowerCase());
+                const searchMatch = searchTerm === '' || jobTitle.includes(searchTerm);
+                
+                if (statusMatch && deptMatch && searchMatch) {
+                    job.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    job.style.display = 'none';
+                }
+            });
+            
+            document.getElementById('jobCount').textContent = `${visibleCount} positions found`;
+        }
+
+        // Candidate status updates
+        function updateCandidateStatus(button, newStatus) {
+            const card = button.closest('.card');
+            const statusElement = card.querySelector('.card-status');
+            
+            // Update status display
+            statusElement.textContent = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
+            statusElement.className = `card-status status-${newStatus}`;
+            card.setAttribute('data-status', newStatus);
+            
+            // Update button text based on new status
+            const actions = card.querySelector('.card-actions');
+            updateActionButtons(actions, newStatus);
+            
+            // Show success message
+            button.textContent = '✓ Updated';
+            button.style.background = '#28a745';
+            button.style.color = 'white';
+            
+            setTimeout(() => {
+                updateActionButtons(actions, newStatus);
+            }, 1500);
+        }
+
+        function updateActionButtons(actionsContainer, status) {
+            let buttonsHTML = '<button class="action-btn btn-primary">View Profile</button>';
+            
+            switch(status) {
+                case 'new':
+                    buttonsHTML += '<button class="action-btn" onclick="updateCandidateStatus(this, \'reviewed\')">Mark as Reviewed</button>';
+                    buttonsHTML += '<button class="action-btn" onclick="updateCandidateStatus(this, \'interview\')">Schedule Interview</button>';
+                    break;
+                case 'reviewed':
+                    buttonsHTML += '<button class="action-btn" onclick="updateCandidateStatus(this, \'interview\')">Schedule Interview</button>';
+                    buttonsHTML += '<button class="action-btn" onclick="updateCandidateStatus(this, \'rejected\')">Reject</button>';
+                    break;
+                case 'interview':
+                    buttonsHTML += '<button class="action-btn">Interview Notes</button>';
+                    buttonsHTML += '<button class="action-btn" onclick="updateCandidateStatus(this, \'hired\')">Move to Hired</button>';
+                    break;
+                case 'hired':
+                    buttonsHTML += '<button class="action-btn">Send Welcome</button>';
+                    buttonsHTML += '<button class="action-btn">Add to Team</button>';
+                    break;
+                case 'rejected':
+                    buttonsHTML += '<button class="action-btn">Send Feedback</button>';
+                    buttonsHTML += '<button class="action-btn" onclick="updateCandidateStatus(this, \'reviewed\')">Reconsider</button>';
+                    break;
+            }
+            
+            actionsContainer.innerHTML = buttonsHTML;
+        }
+
+        // Job management functions
+        function initializeJobForm() {
+            document.getElementById('jobForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const jobData = {
+                    title: document.getElementById('jobTitle').value,
+                    department: document.getElementById('jobDepartment').value,
+                    location: document.getElementById('jobLocation').value,
+                    skills: document.getElementById('jobSkills').value,
+                    description: document.getElementById('jobDescription').value
+                };
+                console.log('Saving job:', jobData);
+                alert('Job saved successfully!');
+                closeJobModal();
+            });
+
+            // Close modal when clicking outside
+            document.getElementById('jobModal').addEventListener('click', function(e) {
+                if (e.target.id === 'jobModal') {
+                    closeJobModal();
+                }
+            });
+        }
+
+        function openJobModal() {
+            document.getElementById('modalTitle').textContent = 'Create New Job Position';
+            document.getElementById('jobForm').reset();
+            document.getElementById('jobModal').style.display = 'block';
+        }
+
+        function editJob(jobId) {
+            document.getElementById('modalTitle').textContent = 'Edit Job Position';
+            // Pre-fill form with existing job data
+            document.getElementById('jobModal').style.display = 'block';
+        }
+
+        function closeJobModal() {
+            document.getElementById('jobModal').style.display = 'none';
+        }
+
+        function selectJob(jobId) {
+            // Update the job selector in candidates view
+            document.getElementById('jobSelect').value = jobId;
+            // Switch back to candidates view
+            showPage('candidates');
+            filterCandidates();
+        }
+
+        function viewApplicants(jobId) {
+            // Switch to candidates view and filter by job
+            document.getElementById('jobSelect').value = jobId;
+            showPage('candidates');
+            filterCandidates();
+        }
+
+        function closeJob(jobId) {
+            if (confirm('Are you sure you want to close this position?')) {
+                // Update job status logic here
+                alert('Job position closed successfully!');
+            }
+        }
+
+        function publishJob(jobId) {
+            if (confirm('Publish this job position?')) {
+                alert('Job published successfully!');
+                // Update status to active
+            }
+        }
+
+        function deleteJob(jobId) {
+            if (confirm('Are you sure you want to delete this draft?')) {
+                alert('Draft deleted successfully!');
+                // Remove from list
+            }
+        }
+
+        // Analytics functionality
+        function initializeAnalytics() {
+            loadJobsForMatching();
+
+            // Job matching selector
+            document.getElementById('jobMatchingSelect').addEventListener('change', function() {
+                const selectedJobId = this.value;
+                if (selectedJobId) {
+                    loadCandidateMatching(selectedJobId);
+                } else {
+                    document.getElementById('candidateMatchingResults').innerHTML = `
+                        <div class="chart-placeholder">
+                            📊 Select a job position to see candidate matching analysis
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        async function loadJobsForMatching() {
+            try {
+                // Fetch jobs from backend - replace with actual API call
+                const jobs = [
+                    { _id: '1', title: 'Frontend Developer', department: 'Engineering' },
+                    { _id: '2', title: 'Backend Developer', department: 'Engineering' },
+                    { _id: '3', title: 'UX Designer', department: 'Design' },
+                    { _id: '4', title: 'Data Analyst', department: 'Analytics' }
+                ];
+
+                const select = document.getElementById('jobMatchingSelect');
+                jobs.forEach(job => {
+                    const option = document.createElement('option');
+                    option.value = job._id;
+                    option.textContent = `${job.title} - ${job.department}`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading jobs:', error);
+            }
+        }
+
+        async function loadCandidateMatching(jobId) {
+            try {
+                // Show loading state
+                document.getElementById('candidateMatchingResults').innerHTML = `
+                    <div class="chart-placeholder">
+                        📊 Loading candidate matching analysis...
+                    </div>
+                `;
+
+                // Replace with actual API call to your backend
+                const response = await fetch(`/api/analytics/top-candidates/${jobId}`);
+                const data = await response.json();
+
+                displayMatchingResults(data);
+            } catch (error) {
+                console.error('Error loading candidate matching:', error);
+
+                // Show sample data for demonstration
+                const sampleData = {
+                    job: {
+                        title: 'Frontend Developer',
+                        department: 'Engineering',
+                        requirements: ['React', 'JavaScript', 'TypeScript', 'CSS', 'HTML']
+                    },
+                    rankedCandidates: [
+                        {
+                            name: 'Sarah Johnson',
+                            email: 'sarah.johnson@email.com',
+                            skills: ['React', 'JavaScript', 'TypeScript', 'Node.js', 'CSS'],
+                            experience: 4,
+                            status: 'Applied',
+                            matchPercentage: 85
+                        },
+                        {
+                            name: 'Michael Chen',
+                            email: 'm.chen@email.com',
+                            skills: ['JavaScript', 'React', 'Python', 'MongoDB'],
+                            experience: 3,
+                            status: 'Screening',
+                            matchPercentage: 70
+                        },
+                        {
+                            name: 'Emily Rodriguez',
+                            email: 'emily.r@email.com',
+                            skills: ['HTML', 'CSS', 'JavaScript', 'Figma'],
+                            experience: 2,
+                            status: 'Applied',
+                            matchPercentage: 65
+                        },
+                        {
+                            name: 'David Park',
+                            email: 'david.park@email.com',
+                            skills: ['Python', 'Django', 'SQL', 'Machine Learning'],
+                            experience: 5,
+                            status: 'Applied',
+                            matchPercentage: 40
+                        },
+                        {
+                            name: 'Lisa Zhang',
+                            email: 'lisa.zhang@email.com',
+                            skills: ['Java', 'Spring', 'MySQL', 'Docker'],
+                            experience: 3,
+                            status: 'Screening',
+                            matchPercentage: 25
+                        }
+                    ]
+                };
+
+                displayMatchingResults(sampleData);
+            }
+        }
+
+        function displayMatchingResults(data) {
+            const container = document.getElementById('candidateMatchingResults');
+
+            let html = `
+                <div style="padding: 1rem;">
+                    <div style="margin-bottom: 1rem;">
+                        <h4 style="margin-bottom: 0.5rem;">Candidates Ranked by Match % for: ${data.job.title}</h4>
+                        <p style="color: #6c757d; font-size: 0.9rem;">
+                            Required Skills: ${data.job.requirements.join(', ')}
+                        </p>
+                    </div>
+                    <div>
+            `;
+
+            data.rankedCandidates.forEach((candidate, index) => {
+                const matchClass = candidate.matchPercentage >= 70 ? 'match-high' :
+                                 candidate.matchPercentage >= 50 ? 'match-medium' : 'match-low';
+                const progressClass = candidate.matchPercentage >= 70 ? 'match-progress-high' :
+                                     candidate.matchPercentage >= 50 ? 'match-progress-medium' : 'match-progress-low';
+
+                html += `
+                    <div class="match-card">
+                        <div class="match-info">
+                            <div class="match-name">#${index + 1} ${candidate.name}</div>
+                            <div class="match-details">
+                                ${candidate.email} • ${candidate.experience} years exp • Status: ${candidate.status}
+                            </div>
+                            <div class="match-skills">
+                                ${candidate.skills.map(skill => `<span class="match-skill-tag">${skill}</span>`).join('')}
+                            </div>
+                        </div>
+                        <div class="match-percentage">
+                            <div class="match-score ${matchClass}">${candidate.matchPercentage}%</div>
+                            <div class="match-progress">
+                                <div class="match-progress-bar ${progressClass}" style="width: ${candidate.matchPercentage}%"></div>
+                            </div>
+                            <div class="match-label">Match</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += '</div></div>';
+            container.innerHTML = html;
+        }
+    </script>
+</body>
+</html>
+                    
